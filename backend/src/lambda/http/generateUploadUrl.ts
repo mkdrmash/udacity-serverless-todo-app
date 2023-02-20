@@ -1,34 +1,24 @@
-import 'source-map-support/register'
-
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
+import 'source-map-support/register'
 import * as middy from 'middy'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
-import { createAttachmentPresignedUrl } from '../../businessLogic/todos'
 import { createLogger } from '../../utils/logger'
+import { attachmentUrl } from '../../helpers/todos'
 
-const logger = createLogger('AttachmentPresignedUrl')
+const logger = createLogger('GenerateAttachmentURLLambda')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    try {
-      const todoId = event.pathParameters.todoId
-      // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
-      logger.info('generating attachment presigned url ', event)
+    const todoId = event.pathParameters.todoId
+    // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
+    logger.info('executing upload url lambda ', event)
 
-      const url = createAttachmentPresignedUrl(todoId)
+    const url = attachmentUrl(todoId)
 
-      return {
-        statusCode: 201,
-        body: JSON.stringify({ uploadUrl: url })
-      }
-    } catch (error) {
-      logger.info('deleting todo error ', error)
-
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error })
-      }
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ uploadUrl: url })
     }
   }
 )

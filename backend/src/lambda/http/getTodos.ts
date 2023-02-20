@@ -3,41 +3,29 @@ import 'source-map-support/register'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
 
-import { getTodosForUser } from '../../businessLogic/todos'
-import { getUserId } from '../utils'
 import { createLogger } from '../../utils/logger'
+import { getAllTodos } from '../../helpers/todos'
 
-const logger = createLogger('GetTodos')
+const logger = createLogger('GetTodosLambda')
 
 // TODO: Get all TODO items for a current user
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     // Write your code here
-    try {
-      logger.info('getting todos ', event)
+    logger.info('executing get todos lambda ', event)
 
-      const userId = getUserId(event)
+    const authorization = event.headers.Authorization
+    const split = authorization.split(' ')
+    const jwtToken = split[1]
 
-      const result = await getTodosForUser(userId)
+    const todos = await getAllTodos(jwtToken)
 
-      if (result.Count !== 0) {
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ items: result.Items })
-        }
-      } else {
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ items: [] })
-        }
-      }
-    } catch (error) {
-      logger.info('getting todos error ', error)
-
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error })
-      }
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ items: todos })
     }
   }
 )

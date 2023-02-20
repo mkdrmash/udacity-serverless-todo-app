@@ -2,38 +2,26 @@ import 'source-map-support/register'
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
-import * as AWS from 'aws-sdk'
 import { cors, httpErrorHandler } from 'middy/middlewares'
 
-import { updateTodo } from '../../businessLogic/todos'
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
 import { createLogger } from '../../utils/logger'
+import { updateTodo } from '../../helpers/todos'
 
-const logger = createLogger('UpdateTodo')
-
-const docClient = new AWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
+const logger = createLogger('UpdateTodoLambda')
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    try {
-      const todoId = event.pathParameters.todoId
-      const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
-      // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
-      logger.info('updating todo ', event)
+    const todoId = event.pathParameters.todoId
+    const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
+    // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
+    logger.info('executing update todo lambda ', event)
 
-      await updateTodo(todoId, updatedTodo)
+    await updateTodo(updatedTodo, todoId)
 
-      return {
-        statusCode: 200,
-        body: null
-      }
-    } catch (error) {
-      logger.info('updating todo error ', error)
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error })
-      }
+    return {
+      statusCode: 200,
+      body: "updated"
     }
   }
 )
